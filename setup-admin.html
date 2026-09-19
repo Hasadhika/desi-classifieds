@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup Initial Admin</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #D80621;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #b00519;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background: #e7f3ff;
+      color: #004085;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      border-left: 4px solid #004085;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Setup Initial Admin</h1>
+    <div class="info">
+      <strong>Note:</strong> This will create the initial admin account for ram@ncplconsulting.net with password NCPL@1234. This page should only be used once during initial setup.
+    </div>
+    <button id="setupBtn" onclick="setupAdmin()">Create Admin Account</button>
+    <div id="result"></div>
+  </div>
+
+  <script type="module">
+    window.setupAdmin = async function() {
+      const btn = document.getElementById('setupBtn');
+      const resultDiv = document.getElementById('result');
+
+      btn.disabled = true;
+      btn.textContent = 'Setting up...';
+      resultDiv.innerHTML = '';
+
+      try {
+        // Get Supabase URL from environment or use default
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || prompt('Enter your Supabase URL:');
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/create-admin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'ram@ncplconsulting.net',
+            password: 'NCPL@1234',
+            fullName: 'Admin User',
+            adminSecret: 'NCPL_ADMIN_SETUP_2024'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        resultDiv.innerHTML = `
+          <div class="result success">
+            <strong>Success!</strong> Admin account created successfully.<br><br>
+            <strong>Email:</strong> ram@ncplconsulting.net<br>
+            <strong>Password:</strong> NCPL@1234<br><br>
+            You can now login at <a href="/Login">/Login</a>
+          </div>
+        `;
+        btn.textContent = 'Admin Created';
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="result error">
+            <strong>Error:</strong> ${error.message}
+          </div>
+        `;
+        btn.disabled = false;
+        btn.textContent = 'Try Again';
+      }
+    }
+  </script>
+</body>
+</html>
